@@ -26,6 +26,7 @@ import fr.eql.al35.comparator.repository.MerchantIRepository;
 @SpringBootApplication
 public class Import implements CommandLineRunner {
 
+	private String localFolder = "./src/main/resources/flux/";
 
 	@Autowired
 	FeedParser FPS;
@@ -40,7 +41,8 @@ public class Import implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-
+		
+		
 		List<Merchant> merchantList = new ArrayList<Merchant>(); 
 		Merchant rakuten = merchantRepository.findById(6).get();
 		Merchant alternate = merchantRepository.findById(9).get();
@@ -52,7 +54,7 @@ public class Import implements CommandLineRunner {
 			fetchFile(merchant);
 
 			System.out.println("꧁∙∙∙∙∙·▫▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ Début de l'import des produits dans la base ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫▫·∙∙∙∙∙꧂");
-			FPS.csvToOffer(convertCSVtoInputStream("./src/main/resources/flux/" + merchant.getMerchantName().toLowerCase() + ".csv"), merchant.getId());
+			FPS.csvToOffer(convertCSVtoInputStream(localFolder + merchant.getMerchantName().toLowerCase() + ".csv"), merchant.getId());
 			
 			System.out.println("꧁∙∙∙∙∙·▫▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ Fin de l'import des produits dans la base ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫▫·∙∙∙∙∙꧂");
 		}
@@ -66,15 +68,15 @@ public class Import implements CommandLineRunner {
 		return targetStream;
 	}
 
-	//récupération et copier du fichier dans un répertoire donné. 
+	//récupération distante et copier du fichier dans un répertoire donné. 
 	public void fetchFile (Merchant merchant) throws MalformedURLException, IOException {
 		FileUtils.copyURLToFile(
 				new URL(merchant.getUrlSource()),
-				new File("./src/main/resources/flux/" + merchant.getMerchantName() + "." + merchant.getFileType()));
+				new File(localFolder + merchant.getMerchantName() + "." + merchant.getFileType()));
 		
 		System.out.println("꧁∙∙∙∙∙·▫▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ Fichier récupéré▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫▫·∙∙∙∙∙꧂");
 		if (merchant.getFileType() == "gzip") {
-		unGunzipFile("./src/main/resources/flux/" + merchant.getMerchantName().toLowerCase() + "." + merchant.getFileType(), "./src/main/resources/flux/" + merchant.getMerchantName().toLowerCase() + ".csv"); //décompression
+		unGunzipFile(localFolder + merchant.getMerchantName().toLowerCase() + "." + merchant.getFileType(), localFolder + merchant.getMerchantName().toLowerCase() + ".csv"); //décompression
 		}
 	}
 	
