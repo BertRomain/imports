@@ -64,18 +64,6 @@ public class Import implements CommandLineRunner {
 			System.out.println("꧁∙∙∙∙∙·▫▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ Fin de l'import des produits dans la base ▫ₒₒ▫ᵒᴼᵒ▫ₒₒ▫ᵒᴼᵒ▫▫·∙∙∙∙∙꧂");
 		}
 
-		//		FileUtils.copyURLToFile(
-		//				new URL("https://productdata.awin.com/datafeed/download/apikey/7902b3dc33bde2e4cbcaca2434eb1b62/language/fr/fid/23609/columns/aw_deep_link,product_name,aw_product_id,merchant_product_id,merchant_image_url,description,merchant_category,search_price,merchant_name,merchant_id,category_name,category_id,aw_image_url,currency,store_price,delivery_cost,merchant_deep_link,language,last_updated,display_price,data_feed_id,ean/format/csv/delimiter/%7C/compression/gzip/"), //récupération du flux
-		//				new File("./src/main/resources/flux/alternate.gzip")); //stockage en local car taille > 50Mo
-		//			unGunzipFile("./src/main/resources/flux/alternate.gzip", "./src/main/resources/flux/alternate.csv"); //décompression
-		//		System.out.println("Fichier importé");
-		//		System.out.println("début de l'import");
-		//		long startTime2 = System.nanoTime(); //flag de début pour calcul du temps d'éxécution.
-		//		FPS.csvToOffer(convertCSVtoInputStream("./src/main/resources/flux/alternate.csv"), 9);
-		//		System.out.println("fin de l'import");//flag de fin pour calcul du temps d'éxécution.
-		//		long endTime2 = System.nanoTime();
-		//		long duration2 = (endTime2 - startTime2);
-		//		System.out.println("Durée de l'import :" + (duration2/1000000000)/60 + " minutes");
 	}
 
 
