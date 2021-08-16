@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -11,9 +12,11 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import fr.eql.al35.comparator.entity.ImportLogHistory;
 import fr.eql.al35.comparator.entity.Merchant;
 import fr.eql.al35.comparator.entity.Offer;
 import fr.eql.al35.comparator.repository.MerchantIRepository;
+import fr.eql.al35.comparator.service.LogService;
 import fr.eql.al35.comparator.service.OfferService;
 
 
@@ -25,17 +28,22 @@ public class FeedParser {
 	private OfferService offerService;
 
 	@Autowired
+	private LogService logService;
+
+	@Autowired
 	private MerchantIRepository merchantIRepository;
-	
+
 	static Merchant merchant; 
 	static Offer offer = new Offer();
-	static int created = 0; 
-	static int rejected = 0; 
-	static int updated = 0; 
-	
+	static Integer rejected = 0; 
+	static Integer created = 0;
+	static Integer updated = 0;
+
+
 	public String TYPE = "text/csv";
+
 	public void csvToOffer(InputStream is, Integer source) {
-		
+
 		//récupération de l'ID du  marchand en fonction de la source
 		merchant = merchantIRepository.findById(source).get();
 		String configEan = merchant.getConfigEan();
@@ -44,13 +52,16 @@ public class FeedParser {
 		String configPrice = merchant.getConfigPrice(); 
 		String configUrl = merchant.getConfigUrl();
 		Integer configRowSize = merchant.getConfigRowSize();
-		char delimiter = merchant.getConfigDelimiter(); 
-		
+		char configDelimiter = merchant.getConfigDelimiter(); 
+
 		long startTime = System.nanoTime(); //flag de début pour le calcul du temps d'éxécution.
-		
+
+		ImportLogHistory importLog = new ImportLogHistory(LocalDateTime.now(), merchant, 0 , 0, 0 ,0);
+
+
 		try (BufferedReader fileReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 				CSVParser csvParser = new CSVParser(fileReader,
-						CSVFormat.DEFAULT.withDelimiter(delimiter)
+						CSVFormat.DEFAULT.withDelimiter(configDelimiter)
 						.withHeader(configEan, configProductName, configDescription,configPrice	, configUrl) //déclaration des headers à récupérer
 						.withFirstRecordAsHeader() //saut de la première ligne 
 						.withIgnoreHeaderCase()
@@ -58,35 +69,41 @@ public class FeedParser {
 						.withIgnoreEmptyLines()
 						.withQuote(null));) //pour les quotes insérées par erreur dans les ligne 
 		{
-			
 			Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 			for (CSVRecord csvRecord : csvRecords) {
-				
+
 				String cleanPrice = "";
-				
+
 				try {
-				String price = csvRecord.get(configPrice);
-				cleanPrice = price.replace("EUR","");
+					String price = csvRecord.get(configPrice);
+					cleanPrice = price.replace("EUR","");
 				} catch (Exception e) {
-					System.out.println(e.toString());
+					logService.ErrorLogging(csvRecord, merchant, "replace");
+					rejected++;				
 					continue;
 				}
 				System.out.println("rowsize : " + csvRecord.size());
 				if (csvRecord.size() != configRowSize ) {  //on ignore les lignes mal formatées
-					rejected ++;
+					importLog.setRejected(importLog.getRejected() +1);
+					logService.ErrorLogging(csvRecord, merchant, "size");
+					rejected++;
 					continue;
 
 				} else if (csvRecord.get(configEan).equalsIgnoreCase("")) { //on ignore les lignes sans EAN
-					rejected ++;
+					importLog.setRejected(importLog.getRejected() +1);
+					logService.ErrorLogging(csvRecord, merchant, "ean");
+					rejected++;
 					continue;
 
 				} else if (cleanPrice.matches(".*[a-z].*")) { //on ignore les lignes dont les contenus génèrent des erreurs de type (double/string)
-					rejected ++;
+					importLog.setRejected(importLog.getRejected() +1);
+					logService.ErrorLogging(csvRecord, merchant, "typeError");
+					rejected++;
 					continue;
 				} 
-				
-				
-				
+
+
+
 				Offer offer = new Offer(
 						csvRecord.get(configEan) + merchant.getSource() + merchant.getMerchantName(),
 						csvRecord.get(configEan),
@@ -95,11 +112,11 @@ public class FeedParser {
 						csvRecord.get(configUrl),
 						Double.parseDouble(cleanPrice),
 						merchant);
-					offerService.insertOnDuplicateKey(offer);
-					created++;
-				System.out.println("Traitement de la ligne " + csvRecord.getRecordNumber());
+				created++;
+				offerService.insertOnDuplicateKey(offer);
 			}
-			
+
+
 			System.out.println("Rapport du flux " + merchant.getMerchantName());
 			System.out.println("Nombre de lignes insérées dans la base de données : " + created);
 			System.out.println("Nombre de lignes mise à jour dans la base de données : " + updated);
@@ -111,8 +128,8 @@ public class FeedParser {
 			throw new RuntimeException("fail to parse CSV file: " + e.getMessage());
 		}
 	}
-	
-	
+
+
 
 
 }

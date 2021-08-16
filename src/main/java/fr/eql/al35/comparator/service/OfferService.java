@@ -75,13 +75,15 @@ public class OfferService implements OfferIService{
 	@Override
 	public void insertOnDuplicateKey(Offer offer) {
 		Query query = em.createNativeQuery(
-"INSERT INTO offer (id, ean, product_name, description, url, price, create_date, modify_date, merchant_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, ?8) " +
+"INSERT INTO offer (id, ean, product_name, description, url, price, create_date, modify_date, merchant_id) "
++ "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, ?8) " +
 		        "ON DUPLICATE KEY UPDATE " +
 		            "product_name = ?3, " +
 		            "description = ?4, " +
 		            "url = ?5, " +
 		            "price = ?6, " +
-		            "modify_date = ?7 ;"
+		            "modify_date = ?7 "+ 
+		            "RETURN 1;"
 		            );
 		query.setParameter(1, offer.getId());
 		query.setParameter(2, offer.getEan());
