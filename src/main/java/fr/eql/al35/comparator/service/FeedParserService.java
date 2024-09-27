@@ -1,4 +1,4 @@
-package fr.eql.al35.comparator.parser;
+package fr.eql.al35.comparator.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,12 +16,10 @@ import fr.eql.al35.comparator.entity.ImportLogHistory;
 import fr.eql.al35.comparator.entity.Merchant;
 import fr.eql.al35.comparator.entity.Offer;
 import fr.eql.al35.comparator.repository.MerchantIRepository;
-import fr.eql.al35.comparator.service.LogService;
-import fr.eql.al35.comparator.service.OfferService;
 
 
 @Service
-public class FeedParser {
+public class FeedParserService {
 
 
 	@Autowired
@@ -43,18 +41,22 @@ public class FeedParser {
 	public String TYPE = "text/csv";
 
 	public void csvToOffer(InputStream is, Integer source) {
-
+		
+		
+		//reset counter 
+		resetCounters();
+		
 		//récupération de l'ID du  marchand en fonction de la source
 		merchant = merchantIRepository.findById(source).get();
-		String configEan = merchant.getConfigEan();
-		String configProductName = merchant.getConfigProductName(); 
-		String configDescription = merchant.getConfigDescription(); 
-		String configPrice = merchant.getConfigPrice(); 
-		String configUrl = merchant.getConfigUrl();
-		Integer configRowSize = merchant.getConfigRowSize();
-		char configDelimiter = merchant.getConfigDelimiter(); 
+		final String configEan = merchant.getConfigEan();
+		final String configProductName = merchant.getConfigProductName(); 
+		final String configDescription = merchant.getConfigDescription(); 
+		final String configPrice = merchant.getConfigPrice(); 
+		final String configUrl = merchant.getConfigUrl();
+		final Integer configRowSize = merchant.getConfigRowSize();
+		final char configDelimiter = merchant.getConfigDelimiter(); 
 
-		long startTime = System.nanoTime(); //flag de début pour le calcul du temps d'éxécution.
+		final long startTime = System.nanoTime(); //flag de début pour le calcul du temps d'éxécution.
 
 		ImportLogHistory importLog = new ImportLogHistory(LocalDateTime.now(), merchant, 0 , 0, 0 ,0);
 
@@ -67,11 +69,13 @@ public class FeedParser {
 						.withIgnoreHeaderCase()
 						.withTrim()
 						.withIgnoreEmptyLines()
-						.withQuote(null));) //pour les quotes insérées par erreur dans les ligne 
+						.withQuote(null));) //pour les quotes insérées par erreur dans les lignes
+						
 		{
-			Iterable<CSVRecord> csvRecords = csvParser.getRecords();
+			final Iterable<CSVRecord> csvRecords = csvParser.getRecords();
 			for (CSVRecord csvRecord : csvRecords) {
-
+				System.out.print('\r');
+				System.out.print("Import du catalogue " + merchant.getMerchantName() + " ligne n°" + csvRecord.getRecordNumber());
 				String cleanPrice = "";
 
 				try {
@@ -82,7 +86,8 @@ public class FeedParser {
 					rejected++;				
 					continue;
 				}
-				System.out.println("rowsize : " + csvRecord.size());
+
+				
 				if (csvRecord.size() != configRowSize ) {  //on ignore les lignes mal formatées
 					importLog.setRejected(importLog.getRejected() +1);
 					logService.ErrorLogging(csvRecord, merchant, "size");
@@ -101,7 +106,6 @@ public class FeedParser {
 					rejected++;
 					continue;
 				} 
-
 
 
 				Offer offer = new Offer(
@@ -123,13 +127,20 @@ public class FeedParser {
 			System.out.println("Nombre de lignes rejetées : " + rejected);
 			long endTime = System.nanoTime(); //flag de fin pour le calcul du temps d'éxécution.
 			long duration = (endTime - startTime);
-			System.out.println("Durée de l'import :" + (duration/1000000000)/60 + " minutes");
+			System.out.println("Durée de l'import : " + (duration/1000000000)/60 + " minutes");
 		} catch (IOException e) {
 			throw new RuntimeException("fail to parse CSV file: " + e.getMessage());
 		}
+		
+		
 	}
 
-
+	public void resetCounters()
+    {
+		rejected = 0; 
+		created = 0;
+		updated = 0;
+    }
 
 
 }

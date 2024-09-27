@@ -59,12 +59,12 @@ public class OfferService implements OfferIService{
 
 
 	@Override
-	public Offer existByEan(Offer offer) {
+	public Offer existByEan(final Offer offer) {
 		Query query = em.createQuery("SELECT o FROM offer o WHERE o.ean = :paramean AND o.merchant = :parammerchant");
 		query.setParameter("paramean", offer.getEan());
 		query.setParameter("parammerchant", offer.getMerchant());
 		try {
-			Offer retrievedOffer = (Offer) query.getSingleResult();
+			final Offer retrievedOffer = (Offer) query.getSingleResult();
 			return retrievedOffer;
 		} catch (NoResultException nre) {
 		}
@@ -73,27 +73,25 @@ public class OfferService implements OfferIService{
 
 
 	@Override
-	public void insertOnDuplicateKey(Offer offer) {
+	public void insertOnDuplicateKey(final Offer offer) {
 		Query query = em.createNativeQuery(
-"INSERT INTO offer (id, ean, product_name, description, url, price, create_date, modify_date, merchant_id) "
-+ "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, ?8) " +
-		        "ON DUPLICATE KEY UPDATE " +
-		            "product_name = ?3, " +
-		            "description = ?4, " +
-		            "url = ?5, " +
-		            "price = ?6, " +
-		            "modify_date = ?7 "+ 
-		            "RETURN 1;"
-		            );
-		query.setParameter(1, offer.getId());
-		query.setParameter(2, offer.getEan());
-		query.setParameter(3, offer.getProductName());
-		query.setParameter(4, offer.getDescription());
-		query.setParameter(5, offer.getUrl());
-		query.setParameter(6, offer.getPrice());
-		query.setParameter(7, java.time.LocalDate.now());
-		query.setParameter(8, offer.getMerchant().getId());
-		query.executeUpdate();
+				"INSERT INTO offer (id, ean, product_name, description, url, price, create_date, modify_date, merchant_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, ?8) " +
+				        "ON DUPLICATE KEY UPDATE " +
+				            "product_name = ?3, " +
+				            "description = ?4, " +
+				            "url = ?5, " +
+				            "price = ?6, " +
+				            "modify_date = ?7 ;"
+				            );
+				query.setParameter(1, offer.getId());
+				query.setParameter(2, offer.getEan());
+				query.setParameter(3, offer.getProductName());
+				query.setParameter(4, offer.getDescription());
+				query.setParameter(5, offer.getUrl());
+				query.setParameter(6, offer.getPrice());
+				query.setParameter(7, java.time.LocalDate.now());
+				query.setParameter(8, offer.getMerchant().getId());
+				query.executeUpdate();
 			
 	}
 

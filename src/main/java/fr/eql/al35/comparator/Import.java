@@ -19,8 +19,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import fr.eql.al35.comparator.entity.Merchant;
-import fr.eql.al35.comparator.parser.FeedParser;
 import fr.eql.al35.comparator.repository.MerchantIRepository;
+import fr.eql.al35.comparator.service.FeedParserService;
 
 @EnableAutoConfiguration
 @SpringBootApplication
@@ -29,7 +29,7 @@ public class Import implements CommandLineRunner {
 	private String localFolder = "./src/main/resources/flux/";
 
 	@Autowired
-	FeedParser FPS;
+	FeedParserService FPS;
 
 	@Autowired
 	MerchantIRepository merchantRepository; 
@@ -44,8 +44,8 @@ public class Import implements CommandLineRunner {
 		
 		
 		List<Merchant> merchantList = new ArrayList<Merchant>(); 
-		Merchant rakuten = merchantRepository.findById(6).get();
-		Merchant alternate = merchantRepository.findById(9).get();
+		final Merchant rakuten = merchantRepository.findById(6).get();
+		final Merchant alternate = merchantRepository.findById(9).get();
 		merchantList.add(rakuten);
 		merchantList.add(alternate);
 		for (Merchant merchant : merchantList) {
@@ -69,7 +69,7 @@ public class Import implements CommandLineRunner {
 	}
 
 	//récupération distante et copier du fichier dans un répertoire donné. 
-	public void fetchFile (Merchant merchant) throws MalformedURLException, IOException {
+	public void fetchFile (final Merchant merchant) throws MalformedURLException, IOException {
 		FileUtils.copyURLToFile(
 				new URL(merchant.getUrlSource()),
 				new File(localFolder + merchant.getMerchantName() + "." + merchant.getFileType()));
@@ -81,17 +81,17 @@ public class Import implements CommandLineRunner {
 	}
 	
 	//décompression du fichier
-	public void unGunzipFile(String compressedFile, String decompressedFile) {
+	public void unGunzipFile(final String compressedFile, final String decompressedFile) {
 
 		byte[] buffer = new byte[1024];
 
 		try {
 
-			FileInputStream fileIn = new FileInputStream(compressedFile);
+			final FileInputStream fileIn = new FileInputStream(compressedFile);
 
-			GZIPInputStream gZIPInputStream = new GZIPInputStream(fileIn);
+			final GZIPInputStream gZIPInputStream = new GZIPInputStream(fileIn);
 
-			FileOutputStream fileOutputStream = new FileOutputStream(decompressedFile);
+			final FileOutputStream fileOutputStream = new FileOutputStream(decompressedFile);
 
 			int bytes_read;
 
